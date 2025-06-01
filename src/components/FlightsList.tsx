@@ -7,8 +7,9 @@ interface FlightInfo {
   destination: string;
   altitude: number;
   speed: number;
-  status: "normal" | "warning" | "emergency";
+  status: "normal" | "warning" | "emergency" | "approaching" | "landing";
   eta: string;
+  landingPermission?: boolean;
 }
 
 const FlightsList = () => {
@@ -26,10 +27,11 @@ const FlightsList = () => {
       callSign: "SU2156",
       origin: "VKO",
       destination: "KZN",
-      altitude: 9800,
-      speed: 820,
-      status: "normal",
+      altitude: 2800,
+      speed: 420,
+      status: "approaching",
       eta: "17:20",
+      landingPermission: false,
     },
     {
       callSign: "DP405",
@@ -44,10 +46,11 @@ const FlightsList = () => {
       callSign: "UN1848",
       origin: "AER",
       destination: "DME",
-      altitude: 11200,
-      speed: 890,
-      status: "normal",
+      altitude: 1500,
+      speed: 380,
+      status: "approaching",
       eta: "18:15",
+      landingPermission: false,
     },
   ]);
 
@@ -74,6 +77,10 @@ const FlightsList = () => {
         return "text-red-400";
       case "warning":
         return "text-yellow-400";
+      case "approaching":
+        return "text-blue-400";
+      case "landing":
+        return "text-green-500";
       default:
         return "text-green-400";
     }
@@ -85,9 +92,23 @@ const FlightsList = () => {
         return "🚨";
       case "warning":
         return "⚠️";
+      case "approaching":
+        return "🛬";
+      case "landing":
+        return "✈️";
       default:
         return "✅";
     }
+  };
+
+  const handleLandingPermission = (callSign: string) => {
+    setFlights((prev) =>
+      prev.map((flight) =>
+        flight.callSign === callSign
+          ? { ...flight, status: "landing", landingPermission: true }
+          : flight,
+      ),
+    );
   };
 
   return (
@@ -106,6 +127,7 @@ const FlightsList = () => {
                 <th className="text-left p-2 text-slate-400">Скорость</th>
                 <th className="text-left p-2 text-slate-400">Статус</th>
                 <th className="text-left p-2 text-slate-400">ETA</th>
+                <th className="text-left p-2 text-slate-400">Действия</th>
               </tr>
             </thead>
             <tbody>
@@ -130,6 +152,23 @@ const FlightsList = () => {
                     {getStatusIcon(flight.status)} {flight.status}
                   </td>
                   <td className="p-2 text-slate-300">{flight.eta}</td>
+                  <td className="p-2">
+                    {flight.status === "approaching" &&
+                    !flight.landingPermission ? (
+                      <button
+                        onClick={() => handleLandingPermission(flight.callSign)}
+                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm font-medium transition-colors"
+                      >
+                        🛬 Разрешить посадку
+                      </button>
+                    ) : flight.status === "landing" ? (
+                      <span className="text-green-400 text-sm">
+                        ✅ Посадка разрешена
+                      </span>
+                    ) : (
+                      <span className="text-slate-500 text-sm">—</span>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
